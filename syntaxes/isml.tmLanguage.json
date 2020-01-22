@@ -12,6 +12,9 @@
 			"include": "#iscomments"
 		},
 		{
+			"include": "#html-if"
+		},
+		{
 			"include": "#jsp"
 		},
 		{
@@ -38,6 +41,9 @@
 				},
 				{
 					"include": "#quoted-double"
+				},
+				{
+					"include": "#attributes"
 				}
 			]
 		},
@@ -45,7 +51,7 @@
 			"patterns": [
 				{
 					"name": "entity.name.function.isml",
-					"match": "\\b\\w+?="
+					"match": "\\b[\\w\\d\\-]+?="
 				}
 			]
 		},
@@ -84,8 +90,13 @@
 		},
 		"comments-short": {
 			"name": "comment.isml",
-			"begin": "<!--",
-			"end": "-->"
+			"begin": "<!--(?!\\[)",
+			"end": "[^\\]]-->",
+			"patterns": [
+				{
+					"include": "#html-if"
+				}
+			]
 		},
 		"comments": {
 			"name": "comment.isml",
@@ -96,6 +107,18 @@
 			"name": "comment.isml",
 			"begin": "<iscomment>",
 			"end": "</iscomment>"
+		},
+		"html-if": {
+			"patterns": [
+				{
+					"name": "comment.isml",
+					"match": "<!--\\[.*?\\]>"
+				},
+				{
+					"name": "comment.isml",
+					"match": "<!\\[.*?\\]-->"
+				}
+			]
 		}
 	},
 	"scopeName": "source.isml"
