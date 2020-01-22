@@ -70,7 +70,7 @@
 		
 		<isinclude template="checkout/common/RestrictedItems">
 	</div>
-	<div class="col-sm-6 col-md-4" data-testing-id="invoice-address-slot">
+	<div class="col-sm-6 col-md-4" data-testing-id="invoice-address-slot"><!--ccwdw>
 
 		<!-------------------------------------------- Billing (Invoice) Address ---------------------------------------------------------------------------->
 		<h2><istext key="checkout.address.billing.label"/></h2>

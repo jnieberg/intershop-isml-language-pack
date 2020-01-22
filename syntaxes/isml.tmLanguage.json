@@ -6,6 +6,9 @@
 			"include": "#comments"
 		},
 		{
+			"include": "#comments-short"
+		},
+		{
 			"include": "#iscomments"
 		},
 		{
@@ -78,6 +81,11 @@
 					"include": "#quoted-single"
 				}
 			]
+		},
+		"comments-short": {
+			"name": "comment.isml",
+			"begin": "<!--",
+			"end": "-->"
 		},
 		"comments": {
 			"name": "comment.isml",
