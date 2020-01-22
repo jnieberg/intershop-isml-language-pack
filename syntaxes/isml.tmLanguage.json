@@ -112,7 +112,7 @@
 			"patterns": [
 				{
 					"name": "comment.isml",
-					"match": "<!--\\[.*?\\]>"
+					"match": "<!--\\[.*?\\](><!--)?>"
 				},
 				{
 					"name": "comment.isml",

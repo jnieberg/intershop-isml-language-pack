@@ -4,7 +4,7 @@
 <!--[if lt IE 9]>
 	<script src="css/styleIE7.css"></script>
 <![endif]-->
-<!--[if gt IE 8]>
+<!--[if !IE]><!-->
 	<isfilebundle name="/css/theme.min.css" processors="CSSCompressor,CSSURLRewriter">
 		<isrender>
 			<link rel="stylesheet" type="text/css" media="all" href="#webRoot().'/'.encodeValue(File:Name).'?lastModified='#
