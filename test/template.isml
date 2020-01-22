@@ -15,8 +15,7 @@
 	<!--- include an additional branding.css if a branding package is installed --->
 	<isinclude
 				url="#URL(Action('IncludeBranding-StyleSheetHook'), Parameter('Hook_StyleSheet_Name','branding.css'))#" />
-<![endif]-->
-
+<!--<![endif]-->
 <!--- Use this way of referencing the theme.css instead of the activated inclusions 
 		if the branding package should be able to completely replace the theme.css instead of adding to it.
 		This way does not provide automatic cache busting for the theme.css. --->

@@ -90,7 +90,7 @@
 		},
 		"comments-short": {
 			"name": "comment.isml",
-			"begin": "<!--(?!\\[)",
+			"begin": "<!--(?!\\[|<!\\[)",
 			"end": "[^\\]]-->",
 			"patterns": [
 				{
@@ -112,11 +112,11 @@
 			"patterns": [
 				{
 					"name": "comment.isml",
-					"match": "<!--\\[.*?\\](><!--)?>"
+					"match": "<!--\\[[\\w\\s\\d!\\.]*?\\](><!--)?>"
 				},
 				{
 					"name": "comment.isml",
-					"match": "<!\\[.*?\\]-->"
+					"match": "(<!--)?<!\\[\\w*?\\]-->"
 				}
 			]
 		}
