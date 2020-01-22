@@ -1,0 +1,87 @@
+<iscontent type="text/html" charset="UTF-8" compact="true" templatemarker="false">
+
+<div class="cart-summary cart-summary-subscription" data-testing-id="cartSubscriptionSection">
+	
+	<div class="radio">
+		<label>
+			<input data-testing-id="cart-selector-onetimepurchace" type="radio" name="CartToSubscriptionSwitch" value="default"{{#'#'#unless isRecurringBasket}} checked="checked"{{/unless}} />
+			<strong><istext key="shopping_cart.costsummary.subscription.checkbox.onetimepurchase"></strong>
+		</label>
+	</div>
+	<iscomment>
+	[Author: Parag Goel
+      		  SNE-21 : Hide ISH Subscription Functionality.
+     		  Description: Code commented for hiding subscription]
+	
+	<div class="radio">
+		<label>
+			<input data-testing-id="cart-selector-subscription" type="radio" name="CartToSubscriptionSwitch" value="subscription"
+				{{#'#'#if isRecurringBasket}} checked="checked"{{/if}}
+				{{#'#'#if isQuoteRelatedBasket}} disabled="disabled"{{/if}} 
+			/>
+			<strong><istext key="shopping_cart.costsummary.subscription.checkbox.subscription"></strong>
+		</label>
+	</div></iscomment>
+
+	{{#'#'#if error}}
+		<p class="alert alert-danger"><istext key="subscription.rest.general.error"/></p>
+	{{/if}}
+	
+	{{#'#'#if isQuoteRelatedBasket}}
+		<p class="alert alert-info"><istext key="subscription.rest.quoterelatedbasket.info"/></p>
+	{{/if}}
+	
+	<div data-testing-id="cartSubscriptionForm" data-section="subscriptionForm" {{#'#'#unless isRecurringBasket}}style="display: none;"{{/unless}}>
+		
+		<div class="row">
+			<div class="col-md-12">
+				<label for="CartToSubscriptionRecurrence"><istext key="shopping_cart.costsummary.subscription.form.recurrence"/></label>
+			</div>
+			<div class="col-xs-4 col-md-4">
+				<div class="form-group">
+					<input data-testing-id="subscriptionRecurrenceCount" type="number" min="1" class="form-control" id="CartToSubscriptionRecurrence" name="subscriptionRecurrenceCount"
+						value="{{count}}" required data-bv-notempty-message="<istext key="shopping_cart.costsummary.subscription.form.validation.recurrence.error.notempty"/>"
+					/>
+				</div>
+			</div>
+			<div class="col-xs-8 col-md-8">
+				{{periodSelector "subscriptionRecurrence" period "subscriptionInterval"}}
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-md-6">
+				<div class="form-group">
+					<label for="CartToSubscriptionStartDate" class="control-label">
+						<istext key="shopping_cart.costsummary.subscription.form.startdate"/>
+					</label>
+					<input data-testing-id="subscriptionStartDate" type="text" name="CartToSubscriptionStartDate" id="CartToSubscriptionStartDate" class="form-control" value="{{startDate}}"
+						required data-bv-notempty-message="<istext key="shopping_cart.costsummary.subscription.form.validation.startdate.error.notempty"/>"
+						data-fv-date="true"
+		                data-fv-date-format="MM/DD/YYYY"
+		                data-fv-date-message="<istext key="shopping_cart.costsummary.subscription.form.validation.startdate.error.notvalid"/>" 
+					/>
+					<p class="input-help"><isprint value="#ucase(CurrentSession:Locale:DefaultRegionalSettings:inputDatePattern)#"></p>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<div class="form-group">
+					<label for="CartToSubscriptionEndDate" class="control-label">
+						<istext key="shopping_cart.costsummary.subscription.form.enddate"/>
+					</label>
+					<input data-testing-id="subscriptionEndDate" type="text" name="CartToSubscriptionEndDate" id="CartToSubscriptionEndDate" class="form-control" value="{{endDate}}" />
+					<p class="input-help"><isprint value="#ucase(CurrentSession:Locale:DefaultRegionalSettings:inputDatePattern)#"></p>
+				</div>
+			</div>
+		</div>
+		
+	</div>
+	
+</div>
+
+<div class="cost-summary" data-section="CartSubscriptionSubscribeButton" {{#'#'#unless isRecurringBasket}}style="display: none;"{{/unless}}>
+	<button type="button" class="btn btn-lg btn-block btn-primary {{#'#'#if checkoutInProgress}}btn-loader{{/if}}" name="SubscriptionSubscribeButton" data-testing-id="subscription-checkout-btn">
+		<div class="loader"></div>
+		<span class="btn-content"><istext key="shopping_cart.costsummary.subscription.form.subscribe"></span>
+	</button>
+</div>

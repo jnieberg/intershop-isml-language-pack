@@ -1,0 +1,47 @@
+{
+	"name": "intershop-isml-language-pack",
+	"displayName": "Intershop ISML Language Pack",
+	"description": "Language support for Intershop's ISML templates",
+	"icon": "images/is7.png",
+	"galleryBanner": {
+		"color": "#339999",
+		"theme": "light"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/jnieberg/intershop-isml-language-pack.git"
+	},
+	"version": "0.0.2",
+	"engines": {
+		"vscode": "^1.41.0"
+	},
+	"categories": [
+		"Programming Languages"
+	],
+	"publisher": "jnieberg",
+	"contributes": {
+		"languages": [
+			{
+				"id": "isml",
+				"aliases": [
+					"ISML",
+					"isml"
+				],
+				"extensions": [
+					".isml"
+				],
+				"configuration": "./language-configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "isml",
+				"scopeName": "source.isml",
+				"path": "./syntaxes/isml.tmLanguage.json",
+				"embeddedLanguages": {
+					"meta.embedded.block.javascript": "javascript"
+				}
+			}
+		]
+	}
+}

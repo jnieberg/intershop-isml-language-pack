@@ -1,0 +1,18 @@
+<iscontent type="text/html" charset="UTF-8" compact="true">
+
+<!--- include the default theme.css generated from Less with a lastModified time stamp for automatic cache busting --->
+<isfilebundle
+	name="/css/theme.min.css" processors="CSSCompressor,CSSURLRewriter">
+	<isrender>
+		<link rel="stylesheet" type="text/css" media="all" href="#webRoot().'/'.encodeValue(File:Name).'?lastModified='#
+			<isprint value="#File:LastModified#" formatter="0">"/>
+	</isrender>
+	<isfile name="/css/theme.css" />
+</isfilebundle>
+<!--- include an additional branding.css if a branding package is installed --->
+<isinclude url="#URL(Action('IncludeBranding-StyleSheetHook'), Parameter('Hook_StyleSheet_Name','branding.css'))#" />
+
+<!--- Use this way of referencing the theme.css instead of the activated inclusions 
+		if the branding package should be able to completely replace the theme.css instead of adding to it.
+		This way does not provide automatic cache busting for the theme.css. --->
+<!--- <link rel="stylesheet" type="text/css" media="all" href="<isinclude url="#URL(Action('IncludeBranding-Resource'), Parameter('Resource_Name','/css/theme.css'))#">"/> --->

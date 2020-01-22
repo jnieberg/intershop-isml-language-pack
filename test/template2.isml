@@ -1,0 +1,65 @@
+<iscontent type="text/html" charset="UTF-8" compact="true">
+<isinclude url="#URL(Action('RESTConfiguration-Start'))#">
+
+<!--- jQuery 3 needs to be directly included using the minimized version since the YUICompressor cannot process the code anymore --->
+<script src="#webRoot().'/js/vendor/jquery-3.3.1.min.js'#"></script>
+
+<isfilebundle name="/js/theme.min.js" processors="JSCompressor">
+	<isrender><script src="#webRoot().'/'.File:Name.'?lastModified='#<ISPRINT value="#File:LastModified#" formatter="0">"></script></isrender>
+	
+	<!--- 3RD PARTY JAVASCRIPT --->
+	<!--- Reactivate JQuery file bundle after platform with closure compiler is consumed --->
+	<!---<isfile name="/js/vendor/jquery-3.3.1.min.js" />--->
+	
+	<!--- the jquery migrate plugin can be used to keep using javascript that is not yet adapted for jQuery 3 --->
+	<!---<isfile name="/js/vendor/jquery-migrate-3.0.1.min.js" />--->
+	
+	<!--- Modernizr - feature detection --->
+	<isfile name="/js/vendor/modernizr-custom-3.6.0.js" />
+	<!--- Enables bootstrap JS components --->
+	<isfile name="/js/vendor/bootstrap-3.4.0.js" />
+	<!--- Additional Bootstrap Form Validation plugin --->
+	<isfile name="/js/vendor/bootstrapValidator-0.5.2.js" />
+	<!--- Add touch events / swipe gesture support for touch devices --->
+	<isfile name="/js/vendor/jquery.mobile.touch-1.5.0-pre.js" />
+	<!--- the last carousel you'll ever need --->
+	<isfile name="/js/vendor/slick-1.8.0.js" />
+	<!--- forcing fixed width inputs to follow a certain pattern --->
+	<isfile name="/js/vendor/jquery.maskedinput-1.4.1.js" />
+	<!--- button select drop down list --->
+	<isfile name="/js/vendor/bootstrap-select-1.13.5.js" />
+	<!--- bootstrap datepicker --->
+	<isfile name="/js/vendor/bootstrap-datepicker-1.8.0.js" />
+	<!--- JavaScript API for handling browser cookies --->
+	<isfile name="/js/vendor/js.cookie-2.2.0.js"/>
+	
+	<!--- CUSTOM JAVASCRIPT --->
+	<isfile name="/js/dialog.js"/>
+	<isfile name="/js/captcha.js"/>
+	<isfile name="/js/validation.js"/>
+	<isfile name="/js/global.js"/>
+	<isfile name="/js/mobile.js"/>
+	<isfile name="/js/category.js"/>
+	<isfile name="/js/productdetail.js"/>
+	<isfile name="/js/checkout.js"/>
+	<isfile name="/js/account.js"/>
+	<isfile name="/js/wishlist.js"/>
+	<isfile name="/js/search.js"/>
+	<isfile name="/js/tracking.js"/>
+	<isfile name="/js/navigation.js"/>
+	<isfile name="/js/video.js"/>
+</isfilebundle>
+
+<!--- include localization file for bootstrap-select --->
+<isinclude template="inc/BootstrapSelect">
+<!--- include localization file for bootstrap datepicker --->
+<isinclude template="inc/BootstrapDatePickerLocales">
+<isinclude template="inc/UserClientValidators.isml">
+<script type="text/javascript">
+	if (typeof RetailShop === 'undefined') {var RetailShop = {}};
+	RetailShop.URLs = {};
+	RetailShop.URLs.getProductComponents = "#URL(Action('ViewProduct-RenderProductComponents'), Parameter('CatalogID', CategoryBO:CatalogBO:Name), Parameter('CategoryName', CategoryBO:Name))#"; // additional params: SKU, cid, [cid, cid, ...]
+	RetailShop.URLs.getRecommendedProducts = "#URL(Action('ViewProductRecommendation-Start'))#"; // params: SKU, ContextViewId
+	RetailShop.URLs.getRecommendationSession = "#URL(Action('ViewProductRecommendation-GetSessionData'))#"; // no params
+	RetailShop.URLs.loginPage = "#URLEX(SecureURL,'',Action('ViewUserAccount-ShowLogin'))#";
+</script>

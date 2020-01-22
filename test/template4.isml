@@ -1,0 +1,593 @@
+<!---
+	  [Author: Swati <swbisht@wundermancommerce.com>
+      SNE-19 : Disabling option to create an additional invoice addresses for user.
+      Description: Commented out Add a new Invoice to address code .]
+ --->
+
+<iscontent personalized="true" type="text/html" charset="UTF-8" compact="true" templatemarker="true">
+<iscache type="forbidden">
+
+<%@page import="com.intershop.beehive.core.capi.pipeline.PipelineDictionary"%>
+<%@page import="java.util.List"%>
+<%@page import="java.util.ArrayList"%>
+
+<!--- Variables Definition --->
+<isset name="AddressSelectExtensionSeparator" value=", " scope="request"/>
+<isset name="MultipleShipToAddresses" value="#CurrentCartBO:Extension("ShippingBucket"):MultipleShipToAddresses#" scope="request"/>
+<ISGetPreference preferencekey="UpdateAddressPreference" domainname="#CurrentDomain:DefaultApplication:Domain:DomainName#" 
+			type="String" return="UpdateAddressFlag">
+
+<!---
+	  [Author: Parag Goel
+      SNE-75 : Show/Hide Shiping to Multiple address with preference
+      Description: Added new preference and check it before displaying the button. .]
+ --->
+<ISGetPreference preferencekey="MultipleShipmentsSupported" domainname="#replace(CurrentDomain:DomainName, '-Site', '')#" 
+			type="String" return="MultipleShipmentsSupportedFlag">
+			
+<isif condition="#NOT(MultipleShipToAddresses)#">
+	<isif condition="#CurrentCartBO:MultipleShipmentsSupported#">
+		<isset name="OrderShippingBucket" value="#CurrentCartBO:Extension("ShippingBucket")#" scope="request"/>
+		<isset name="CommonShipToAddress" value="#OrderShippingBucket:SoleShipToAddressBO#" scope="request">
+	<iselse>
+		<isset name="CommonShipToAddress" value="#CurrentCartBO:CommonShipToAddressBO#" scope="request">
+	</isif>
+</isif>
+
+<!--- Progress Bar --->
+<isinclude template="checkout/common/HeaderProgressBar">
+
+<div class="marketing-area">
+	<ISMarketingSlot id="baseMarketing">
+</div>
+
+<h1><istext key="checkout.addresses.heading" /></h1>
+
+<div class="row checkout-address-book" data-testing-id="checkout-address-page">
+	<div class="col-sm-12">
+		<isif condition="#isDefined(ERROR_AddressSelection) OR (NOT isDefined(CurrentCartBO:InvoiceToAddressBO)) OR (NOT isDefined(CommonShipToAddress) AND NOT MultipleShipToAddresses)#">
+			<div class="alert alert-danger">
+				<p><istext key="checkout.addresses.no_Selection.error"/></p>
+			</div>
+		</isif>
+		<isif condition="#isDefined(AddressUpdateResult) AND NOT(AddressUpdateResult:Success) AND NOT(isDefined(AddressCreationResult))#">
+			<isset name="AddressCreationResult" value="#AddressUpdateResult#" scope="request">
+		</isif>	
+		<isif condition="#isDefined(AddressCreationResult) AND NOT(AddressCreationResult:Success)#">
+			<isif condition="#AddressCreationResult:FailureCode EQ 'DuplicateAddress'#">
+				<div class="alert alert-info">
+					<p><istext key="checkout.addresses.create_address.duplicate.error"/></p>
+				</div>
+			<iselse>
+				<div class="alert alert-danger">
+					<p><istext key="#'checkout.addresses.create_address.'.AddressCreationResult:FailureCode.'.error'#"/></p>
+				</div>
+			</isif>
+		</isif>
+
+		<isBasketValidationMessages basketValidationResults="#BasketValidationResults#">
+		<isOrderCreationMessages orderCreationResult="#OrderCreationResult#" basketValidationResults="#BasketValidationResults#">
+		
+		<isinclude template="checkout/common/RestrictedItems">
+	</div>
+	<div class="col-sm-6 col-md-4" data-testing-id="invoice-address-slot">
+
+		<!-------------------------------------------- Billing (Invoice) Address ---------------------------------------------------------------------------->
+		<h2><istext key="checkout.address.billing.label"/></h2>
+		<isif condition="#isDefined(CurrentCartBO:InvoiceToAddressBO)#">
+			<isif condition="#(EditBillingAddress EQ 'true') AND (isDefined(updateAddress)) AND NOT(AddressForm:isInvalid)#"><!--- js disabled --->
+				<isset scope="request" name="EditBillingAddress" value="false">
+			</isif>
+			<div class="address-box<isif condition="#EditBillingAddress EQ 'true'#"> hide</isif>">
+				<div class="pull-right">
+					<isif condition="#UpdateAddressFlag eq 'true'#">
+						<a 
+							href="#URL(Action('ViewCheckoutAddressBook-EditAddress'),Parameter('EditBillingAddress','true'), Parameter('AddressID', CurrentCartBO:InvoiceToAddressBO:URN))#" 
+							class="btn-tool"
+							title="<istext key="checkout.address.update.button.label" />"
+						>
+							<span class="glyphicon glyphicon-pencil"></span>
+						</a>	
+					</isif>
+				</div>
+				<isaddress address="#CurrentCartBO:InvoiceToAddressBO#" showemail="#NOT(CurrentSession:LoggedIn)#">
+				
+				<!-- Registered User's fields -->
+				<isif condition="#isDefined(UserBO) AND UserBO:Registered AND isDefined(CurrentCartBO:InvoiceToAddressBO)#">
+					<isinclude extensionpoint="RegisteredUserExtensions"/>
+				</isif>
+			
+				<isinclude extensionpoint="InvoiceToAddressDetailsExtensions"/>
+			</div>	
+		<iselse>
+			<p class="text-danger"><istext key="checkout.addresses.no_Selection.invoice.error"/></p>
+		</isif>
+
+		<!-------------------------------------------- Edit Billing Address ---------------------------------------------------------------------------->
+		<isif condition="#isDefined(CurrentCartBO:InvoiceToAddressBO)#">
+			<div class="address-form-container collapse<isif condition="#EditBillingAddress EQ 'true'#"> in</isif>" id="billingAddressContainer">
+
+				<isform method="post" action="#URL(Action('ViewCheckoutAddresses-Dispatch'))#" 
+												class="form-horizontal bv-form" 
+												data-bv-message="This value is not valid"
+												data-bv-feedbackicons-valid="glyphicon glyphicon-ok"
+												data-bv-feedbackicons-invalid="glyphicon glyphicon-remove"
+												data-bv-feedbackicons-validating="glyphicon glyphicon-refresh">
+
+					<input type="hidden" name="AddressID" value="<isprint value = "#CurrentCartBO:InvoiceToAddressBO:URN#">" />
+					<input type="hidden" name="EditBillingAddress" value="true" />
+
+					<isif condition="#AddressForm:isSubmitted#">
+						<ispipeline pipeline="ProcessWebforms-GetWebFormInfosForCountry" alias="dict" params="#ParamMap(ParamEntry('ConfigurationPrefix', 'WebFormSelectorSuffix'), ParamEntry('AddressFormPrefix', 'Address'), ParamEntry('CountryCode', AddressForm:CountryCode:Value))#"/>
+					<iselse>
+						<ispipeline pipeline="ProcessWebforms-GetWebFormInfosForCountry" alias="dict" params="#ParamMap(ParamEntry('ConfigurationPrefix', 'WebFormSelectorSuffix'), ParamEntry('AddressFormPrefix', 'Address'), ParamEntry('CountryCode', CurrentCartBO:InvoiceToAddressBO:CountryCode))#"/>
+					</isif>
+
+					<isaddressform
+						webform="#AddressForm#"
+						address="#CurrentCartBO:InvoiceToAddress#"
+						countrylist="#ShippingCountries#"
+						addresstemplate="#'modules/address/forms/'.dict:WebFormFileName#"
+						salutation_enumeration_provider="#SalutationEnumerationKeyProvider#">
+
+					<isinclude extensionpoint="AdditionalAddressFieldsExtensions"/>
+
+					<isif condition="#CurrentSession:LoggedIn#">
+						<isaddressusageinput
+							webform="#AddressForm#"
+							addressBO="#CurrentCartBO:InvoiceToAddressBO#"
+							customerBO="#CustomerBO#"
+							userBO="#UserBO#"
+							checkoutAddressType="invoice"
+						>
+					<iselse>
+						<isinclude template="modules/address/forms/inc/EmailInput"/>
+					</isif>
+
+					<div class="form-group">
+						<div class="col-sm-offset-4 col-sm-8 col-md-offset-0 col-md-12 col-lg-offset-4 col-lg-8">
+							<button class="btn btn-primary" name="updateAddress" type="submit"><istext key="checkout.multiple_address.save.button.label" /></button>
+							<button data-toggle="collapse" data-target="#'#'#billingAddressContainer" type="reset" name="cancel" class="btn btn-default cancel"><istext key="checkout.address.cancel.button.label" /></button>
+						</div>
+					</div>
+				</isform>
+			</div>
+		</isif>
+		
+		<!--- Select another invoice address --->
+		<isif condition="#(InvoiceAddresses:Size > 1) OR ((InvoiceAddresses:Size > 0) AND NOT isDefined(CurrentCartBO:InvoiceToAddressBO))#">
+			<isform method="post" action="#URL(Action('ViewCheckoutAddressBook-UseAsInvoiceToAddress'))#">
+				<div class="form-group">
+					<select 
+						id="InvoiceAddressID"
+						name="InvoiceAddressID" 
+						class="form-control selectpicker select-alt-address useAsBillingAddress" 
+						data-form-action-key="changeAddress" 
+						data-live-search="true"
+						<isif condition="#isDefined(CurrentCartBO:InvoiceToAddressBO)#">
+							title="<istext key="checkout.addresses.select_a_different_address.default" />"
+						<iselse>
+							title="<istext key="checkout.addresses.select_invoice_address.button" />"
+						</isif>	
+					>
+						
+						<isloop iterator="InvoiceAddresses" alias="Address"> 
+							<isif condition="#(NOT (isDefined(CurrentCartBO:InvoiceToAddressBO) AND Address:hasSameAddressData(CurrentCartBO:InvoiceToAddressBO))) 
+								AND (NOT isDefined (Address:Extension("Store")))
+								AND ((isDefined(Address:Country) AND (Address:Country NE ''))
+								OR (isDefined(Address:CountryCode) AND (Address:CountryCode NE ''))
+								OR (isDefined(Address:City) AND (Address:City NE ''))
+								OR (isDefined(Address:AddressLine1) AND (Address:AddressLine1 NE '')))#">
+								<option value="<isprint value = "#Address:URN#">" >
+									<isinclude extensionpoint="AddressSelectExtensions"/>
+									<isprint value="#Address:FirstName#"> <isprint value="#Address:LastName#">, <isprint value="#Address:AddressLine1#"><isif condition="#isDefined(Address:AddressLine2) AND (Address:AddressLine2 NE '')#"> <isprint value="#Address:AddressLine2#"></isif>, <isprint value="#Address:City#">
+								</option>
+							</isif>
+						</isloop>
+						
+					</select>
+				</div>
+			</isform>
+		</isif>
+
+		<!--- Add a new Invoice to address --->
+		<!-- <div class="form-group">
+			<a href="#URL(Action('ViewCheckoutAddressBook-EditAddress'),Parameter('NewBillingAddress','true'))#"><istext key="checkout.create_address.link" /></a>
+		</div> -->
+		
+
+		<!-------------------------------------------- New Billing Address ---------------------------------------------------------------------------->
+		<isif condition="#(NewBillingAddress EQ 'true') AND (isDefined(addNewBilling))#"><!--- js disabled --->
+			<isset scope="request" name="NewBillingAddress" value="false">
+		</isif>
+		<div class="collapse<isif condition="#NewBillingAddress EQ 'true'#"> in</isif>" id="newBillingAddressContainer">
+
+			<isform method="post" action="#URL(Action('ViewCheckoutAddresses-Dispatch'))#" 
+				class="form-horizontal bv-form" 
+				data-bv-message="This value is not valid"
+				data-bv-feedbackicons-valid="glyphicon glyphicon-ok"
+				data-bv-feedbackicons-invalid="glyphicon glyphicon-remove"
+				data-bv-feedbackicons-validating="glyphicon glyphicon-refresh">
+	
+				<input type="hidden" name="addAndSelectAsBilling" value="true" />
+				<input type="hidden" name="NewBillingAddress" value="true" />
+	
+				<isinclude extensionpoint="AddressForm"/>
+	
+				<isif condition="#CurrentSession:LoggedIn#">
+					<isaddressusageinput
+						webform="#NewAddressForm#"	
+						customerBO="#CustomerBO#"
+						userBO="#UserBO#"
+						checkoutAddressType="invoice"
+					>
+				</isif>
+				
+				<div class="form-group">
+					<div class="col-sm-offset-4 col-sm-8 col-md-offset-0 col-md-12 col-lg-offset-4 col-lg-8">
+						<button type="submit" name="addNewBilling" class="btn btn-primary"><istext key="checkout.address.save.button.label" /></button>
+						<button data-toggle="collapse" data-target="#'#'#newBillingAddressContainer" type="reset" name="cancel" class="btn btn-default cancel"><istext key="checkout.address.cancel.button.label" /></button>
+					</div>
+				</div>
+	
+			</isform>
+
+		</div>
+	</div>
+	<!-------------------------------------------- Shipping Address ---------------------------------------------------------------------------->
+	<div class="col-sm-6 col-md-4" data-testing-id="shipping-address-slot">
+		<h2><isif condition="#MultipleShipToAddresses#">
+				<istext key="checkout.address.shipping.multiple.label"/>
+			<iselse>
+				<istext key="checkout.address.shipping.label"/>
+			</isif></h2>
+
+		<!-------------------------------------------- Multiple Shipping Address ---------------------------------------------------------------------------->
+		<isif condition="#MultipleShipToAddresses#">
+<!---ToDo: --->
+			<%
+				PipelineDictionary dict = getPipelineDictionary();
+				List addresses = new ArrayList();
+				addresses.add(dict.get("ShippingAddresses"));
+				getPipelineDictionary().put("AllAddresses", addresses.iterator());
+			%>
+	
+			<isset scope="request" name="firstTableRow" value="true">
+	
+			<isif condition="#isDefined(AllAddresses) AND hasLoopElements(AllAddresses)#">
+	
+				<isloop iterator="AllAddresses" alias="AddressIterator" counter="Counter1">
+					<isif condition="#isDefined(AddressIterator) AND hasLoopElements(AddressIterator)#">
+	
+						<isloop iterator="AddressIterator" alias="Address" counter="Counter2">
+							<isset scope="request" name="isShippingAddress" value="false">
+	
+							<isloop iterator="CurrentCartBO:ProductLineItemBOs" alias="PLI" counter="c">
+								<isif condition="#(PLI:ShipToAddressBO:ID EQ Address:ID)#">
+									<isset scope="request" name="isShippingAddress" value="true">
+								</isif>
+							</isloop>
+	
+							<!--- Edit and Delete --->
+							<isif condition="#isShippingAddress EQ 'true'#">
+								<isset scope="request" name="firstTableRow" value="false">
+								<isif condition="#(EditShippingAddress EQ 'true') AND NOT(AddressForm:isInvalid) AND (isDefined(updateAddress))#"><!--- js disabled --->
+									<isset scope="request" name="EditShippingAddress" value="false">
+								</isif>
+								<div class="address-box<isif condition="#(EditShippingAddress EQ 'true')AND(Address:URN EQ AddressID)#"> hide</isif>">
+									<isif condition="#(isDefined(Address) AND (NOT isDefined (Address:Extension("Store"))) AND
+											(Address:AddressName NE 'EmailAddress'))#"><!--- system addresses are not editable --->
+										<div class="pull-right">
+										<isif condition="#UpdateAddressFlag eq 'true'#">
+											<a 
+												href="#URL(Action('ViewCheckoutAddressBook-EditAddress'),Parameter('EditShippingAddress','true'), Parameter('AddressID',Address:URN))#" 
+												class="btn-tool"
+												title="<istext key="checkout.address.update.button.label" />"
+											>
+												<span class="glyphicon glyphicon-pencil"></span>
+											</a></isif>
+											<isif condition="#(Address:ID NE CurrentCartBO:InvoiceToAddress:ID) AND 
+												(
+													(
+														isDefined(UserBO) AND (UserBO:PreferredInvoiceToAddressBO:ID NE Address:ID) AND (UserBO:PreferredShipToAddressBO:ID NE Address:ID)
+													) OR (NOT isDefined(UserBO))
+												)#">
+												<isif condition="#UpdateAddressFlag eq 'true'#">
+												<a href="#URL(Action('ViewCheckoutAddressBook-ShowAddressDeleteConfirmationDialog'), Parameter("AddressID", Address:URN))#" 
+													class="btn-tool" 
+													data-dialog
+													title="<istext key="checkout.address.delete.button.label" />"
+												>
+													<span class="glyphicon glyphicon-trash"></span>
+												</a></isif>
+											</isif>
+										</div>
+									</isif>
+									<isaddress address="#Address#" showemail="#(CurrentCartBO:TotalProductQuantity EQ CurrentCartBO:ShippedByEmailProductsQuantity) OR (Address:AddressName EQ 'EmailAddress')#">
+								</div>
+		
+			<!-------------------------------------------- Edit Shipping Address for Multiple Shipping ---------------------------------------------------------------------------->
+								
+								<div class="address-form-container collapse<isif condition="#(EditShippingAddress EQ 'true')AND(Address:URN EQ AddressID)#"> in</isif>" id="shippingAddressContainer_<isprint value = "#Counter1.'_'.Counter2#">">
+	
+									<isform method="post" action="#URL(Action('ViewCheckoutAddresses-Dispatch'))#"	
+										class="form-horizontal bv-form" 
+										data-bv-message="This value is not valid"
+										data-bv-feedbackicons-valid="glyphicon glyphicon-ok"
+										data-bv-feedbackicons-invalid="glyphicon glyphicon-remove"
+										data-bv-feedbackicons-validating="glyphicon glyphicon-refresh">
+									
+										<input type="hidden" name="AddressID" value="<isprint value = "#AddressID#">" />
+										<input type="hidden" name="EditShippingAddress" value="true" />
+	
+										<isif condition="#AddressForm:isSubmitted#">
+											<ispipeline pipeline="ProcessWebforms-GetWebFormInfosForCountry" alias="dict" params="#ParamMap(ParamEntry('ConfigurationPrefix', 'WebFormSelectorSuffix'), ParamEntry('AddressFormPrefix', 'Address'), ParamEntry('CountryCode', AddressForm:CountryCode:Value))#"/>
+										<iselse>
+											<ispipeline pipeline="ProcessWebforms-GetWebFormInfosForCountry" alias="dict" params="#ParamMap(ParamEntry('ConfigurationPrefix', 'WebFormSelectorSuffix'), ParamEntry('AddressFormPrefix', 'Address'), ParamEntry('CountryCode', Address:CountryCode))#"/>
+										</isif>
+	
+										<isaddressform
+											webform="#AddressForm#"
+											address="#Address#"
+											countrylist="#ShippingCountries#"
+											isshippingaddress="true"
+											addresstemplate="#'modules/address/forms/'.dict:WebFormFileName#"
+											salutation_enumeration_provider="#SalutationEnumerationKeyProvider#"
+										>
+										
+										<isif condition="#CurrentSession:LoggedIn#">
+											<isaddressusageinput
+												webform="#AddressForm#"
+												addressBO="#Address#"
+												customerBO="#CustomerBO#"
+												userBO="#UserBO#"
+												checkoutAddressType="shipping"
+											>
+										</isif>
+	
+										<div class="form-group">
+											<div class="col-sm-offset-4 col-sm-8 col-md-offset-0 col-md-12 col-lg-offset-4 col-lg-8">
+												<button name="updateAddress" type="submit" class="btn btn-primary"><istext key="checkout.multiple_address.save.button.label" /></button>
+												<button data-toggle="collapse" data-target="#'#'#shippingAddressContainer_<isprint value = "#Counter1.'_'.Counter2#">" type="reset" name="cancel" class="btn btn-default cancel"><istext key="checkout.address.cancel.button.label" /></button>
+											</div>
+										</div>
+									</isform>
+								</div>
+							</isif>
+						</isloop>
+					</isif>
+				</isloop>
+				<a href="#URL(Action('ViewCheckoutAddressBook-EditAddress'),Parameter('NewShippingAddress','true'))#">
+					<istext key="checkout.create_address.link" />
+				</a>
+			</isif>
+		<iselse>
+			<!-------------------------------------------- Shipping Address (no Multiple Shipping) ---------------------------------------------------------------------------->
+			<isif condition="#isDefined(CommonShipToAddress)#">
+				<isif condition="#(EditShippingAddress EQ 'true') AND (isDefined(updateAddress)) AND NOT(AddressForm:isInvalid)#"><!--- js disabled --->
+					<isset scope="request" name="EditShippingAddress" value="false">
+				</isif>
+				<isif condition="#isDefined(CurrentCartBO:InvoiceToAddressBO) AND CurrentCartBO:InvoiceToAddressBO:hasSameAddressData(CommonShipToAddress)#">
+					<p class="section"><istext key="checkout.same_as_billing_address.text" /><p>
+				<iselse>
+					<div class="address-box<isif condition="#EditShippingAddress EQ 'true'#"> hide</isif>">
+						<!--- Edit and Delete --->
+						
+						<isif condition="#(NOT isDefined (CommonShipToAddress:Extension("Store")))#"><!--- system addresses are not editable --->
+							<isif condition="#CurrentCartBO:TotalProductQuantity NE CurrentCartBO:ShippedByEmailProductsQuantity#">
+								<div class="pull-right">
+								<isif condition="#UpdateAddressFlag eq 'true'#">
+									<a 
+										href="#URL(Action('ViewCheckoutAddressBook-EditAddress'),Parameter('EditShippingAddress','true'), Parameter('AddressID', CommonShipToAddress:URN))#"
+										class="btn-tool"
+										title="<istext key="checkout.address.update.button.label" />"
+									>
+										<span class="glyphicon glyphicon-pencil"></span>
+									</a>	
+								</isif>
+									<isif condition="#(
+										(
+											isDefined(UserBO) AND (UserBO:PreferredInvoiceToAddressBO:ID NE CommonShipToAddress:ID) AND (UserBO:PreferredShipToAddressBO:ID NE CommonShipToAddress:ID)
+										) OR (NOT isDefined(UserBO))
+									)#">
+									<isif condition="#UpdateAddressFlag eq 'true'#">
+										<a 
+											href="#URL(Action('ViewCheckoutAddressBook-ShowAddressDeleteConfirmationDialog'), Parameter('AddressID', CommonShipToAddress:URN))#" 
+											class="btn-tool" 
+											data-dialog 
+											title="<istext key="checkout.address.delete.button.label"/>"
+										>
+											<span class="glyphicon glyphicon-trash"></span>
+										</a></isif>
+									</isif>
+								</div>
+							</isif>
+						</isif>
+						<isaddress address="#CommonShipToAddress#" showemail="true">
+					</div>
+				</isif>
+			<iselse>
+				<p class="text-danger"><istext key="checkout.addresses.no_Selection.shipping.error"/></p>
+			</isif>
+		
+			<isif condition="#(NOT MultipleShipToAddresses) AND isDefined(CommonShipToAddress)#">
+
+				<!-------------------------------------------- Edit Shipping Address ---------------------------------------------------------------------------->
+	
+				<div class="address-form-container collapse<isif condition="#EditShippingAddress EQ 'true'#"> in</isif>" id="shippingAddressContainer">
+					<isform method="post" action="#URL(Action('ViewCheckoutAddresses-Dispatch'))#"	
+						class="form-horizontal bv-form" 
+						data-bv-message="This value is not valid"
+						data-bv-feedbackicons-valid="glyphicon glyphicon-ok"
+						data-bv-feedbackicons-invalid="glyphicon glyphicon-remove"
+						data-bv-feedbackicons-validating="glyphicon glyphicon-refresh">
+	
+						<input type="hidden" name="AddressID" value="<isprint value = "#CommonShipToAddress:URN#">" />
+						<input type="hidden" name="EditShippingAddress" value="true" />
+	
+						<isif condition="#AddressForm:isSubmitted#">
+							<ispipeline pipeline="ProcessWebforms-GetWebFormInfosForCountry" alias="dict" params="#ParamMap(ParamEntry('ConfigurationPrefix', 'WebFormSelectorSuffix'), ParamEntry('AddressFormPrefix', 'Address'), ParamEntry('CountryCode', AddressForm:CountryCode:Value))#"/>
+						<iselse>
+							<ispipeline pipeline="ProcessWebforms-GetWebFormInfosForCountry" alias="dict" params="#ParamMap(ParamEntry('ConfigurationPrefix', 'WebFormSelectorSuffix'), ParamEntry('AddressFormPrefix', 'Address'), ParamEntry('CountryCode', CommonShipToAddress:CountryCode))#"/>
+						</isif>
+
+						<isaddressform
+							webform="#AddressForm#"
+							address="#CommonShipToAddress#"
+							countrylist="#ShippingCountries#"
+							isshippingaddress="true"
+							addresstemplate="#'modules/address/forms/'.dict:WebFormFileName#"
+							salutation_enumeration_provider="#SalutationEnumerationKeyProvider#">
+							
+						<isif condition="#CurrentSession:LoggedIn#">
+							<isaddressusageinput
+								webform="#AddressForm#"
+								addressBO="#CommonShipToAddress#"
+								customerBO="#CustomerBO#"
+								userBO="#UserBO#"
+								checkoutAddressType="shipping"
+							>
+						</isif>	
+
+						<div class="form-group">
+							<div class="col-sm-offset-4 col-sm-8 col-md-offset-0 col-md-12 col-lg-offset-4 col-lg-8">
+								<button name="updateAddress" type="submit" class="btn btn-primary"><istext key="checkout.multiple_address.save.button.label" /></button>
+								<button data-toggle="collapse" data-target="#'#'#shippingAddressContainer" type="reset" name="cancel" class="btn btn-default cancel"><istext key="checkout.address.cancel.button.label" /></button>
+							</div>
+						</div>
+					</isform>
+				</div>
+			</isif>
+
+			<!--- Select another Shipping Address --->
+			<isif condition="#CurrentCartBO:TotalProductQuantity NE CurrentCartBO:ShippedByEmailProductsQuantity#">
+
+				<isform method="post" action="#URL(Action('ViewCheckoutAddressBook-UseAsShipToAddress'))#" class="shippingAddressSelect">
+					<isif condition="#(ShippingAddresses:Size > 1) OR ((ShippingAddresses:Size > 0) AND NOT isDefined(CommonShipToAddress))#">
+						<div class="form-group">
+							<select 
+								name="ShippingAddressID" 
+								class="form-control selectpicker select-alt-address useAsShippingAddress" 
+								data-form-action-key="changeAddress"
+								data-live-search="true"
+								<isif condition="#isDefined(CommonShipToAddress:ID)#">
+									title="<istext key="checkout.addresses.select_a_different_address.default" />"
+								<iselse>
+									title="<istext key="checkout.addresses.select_shipping_address.button" />"
+								</isif>	
+							>
+								<isif condition="#isDefined(ShippingAddresses) AND hasLoopElements(ShippingAddresses)#">
+								
+									<isloop iterator="ShippingAddresses" alias="Address">
+										 <isif condition="#(NOT(isDefined(CommonShipToAddress) AND Address:hasSameAddressData(CommonShipToAddress)))
+											AND (NOT isDefined (Address:Extension("Store")))
+											AND ((isDefined(Address:Country) AND (Address:Country NE ''))					
+											OR (isDefined(Address:CountryCode) AND (Address:CountryCode NE ''))
+											OR (isDefined(Address:City) AND (Address:City NE ''))
+											OR (isDefined(Address:AddressLine1) AND (Address:AddressLine1 NE '')))#">
+											<option value="<isprint value = "#Address:URN#">" >
+												<isinclude extensionpoint="AddressSelectExtensions"/>
+												<isprint value="#Address:FirstName#"> <isprint value="#Address:LastName#">, <isprint value="#Address:AddressLine1#"><isif condition="#isDefined(Address:AddressLine2) AND (Address:Street2 NE '')#"> <isprint value="#Address:AddressLine2#"></isif>, <isprint value="#Address:City#">
+											</option>
+											</isif>
+									</isloop>
+								</isif>
+							</select>
+						</div>
+					</isif>
+					<div id="checkoutAddressSelectedStore" style="display:none"></div><!--- container for selected store address --->
+				</isform>
+				
+				<isif condition="#(isDefined(PickupInStoreEnabled)) AND (PickupInStoreEnabled EQ 'true')#">
+					<p>
+						<a href="#URL(Action('ViewStoreAddresses-Start'))#" data-dialog><istext key="checkout.addresses.shipping_address.option4.text"/></a>
+					</p>
+				</isif>
+			</isif>
+			<!--- new shipping address link --->
+			<isif condition="#CurrentCartBO:TotalProductQuantity NE CurrentCartBO:ShippedByEmailProductsQuantity#">
+				<div class="section form-group row">
+					<div class="col-sm-6">
+						<a href="#URL(Action('ViewCheckoutAddressBook-EditAddress'),Parameter('NewShippingAddress','true'))#"><istext key="checkout.create_address.link" /></a>
+					</div>
+				</div>
+			</isif>
+		</isif>
+
+		<!-------------------------------------------- New Shipping Address ---------------------------------------------------------------------------->
+		<isif condition="#(NewShippingAddress EQ 'true') AND (isDefined(addNewBilling))#"><!--- js disabled --->
+			<isset scope="request" name="NewShippingAddress" value="false">
+		</isif>
+
+		<div class="collapse<isif condition="#NewShippingAddress EQ 'true'#"> in</isif>" id="newShippingAddressContainer">
+
+			<isform method="post" action="#URL(Action('ViewCheckoutAddresses-Dispatch'))#" 
+				class="form-horizontal bv-form" 
+				data-bv-message="This value is not valid"
+				data-bv-feedbackicons-valid="glyphicon glyphicon-ok"
+				data-bv-feedbackicons-invalid="glyphicon glyphicon-remove"
+				data-bv-feedbackicons-validating="glyphicon glyphicon-refresh">
+
+				<input type="hidden" name="AddressID" value="newAddress" />
+				<input type="hidden" name="addAndSelectAsShipping" value="true" />
+				<input type="hidden" name="NewShippingAddress" value="true" />
+
+				<isinclude extensionpoint="AddressForm"/>
+				
+				<isif condition="#CurrentSession:LoggedIn#">
+					<isaddressusageinput
+						webform="#NewAddressForm#"	
+						customerBO="#CustomerBO#"
+						userBO="#UserBO#"
+						checkoutAddressType="shipping"
+					>
+				</isif>
+
+				<div class="form-group">
+					<div class="col-sm-offset-4 col-sm-8 col-md-offset-0 col-md-12 col-lg-offset-4 col-lg-8">
+						<button type="submit" name="addNewBilling" class="btn btn-primary"><istext key="checkout.address.save.button.label" /></button>
+						<button type="reset" data-toggle="collapse" data-target="#'#'#newShippingAddressContainer" name="cancel" class="btn btn-default"><istext key="checkout.address.cancel.button.label" /></button>
+					</div>
+				</div>
+
+			</isform>
+		</div>
+		
+		<!--- Multiple Shipping Button --->
+		<!---
+		  [Author: Parag Goel
+	      SNE-75 : Show/Hide Shiping to Multiple address with preference
+	      Description: Added MultipleShipmentsSupportedFlag for preference and check it before displaying the button.]
+ 	    --->
+		<isif condition="#MultipleShipmentsSupportedFlag eq 'true'#">
+			<isif condition="#((CurrentCartBO:TotalProductQuantity > 1) AND (CurrentCartBO:MultipleShipmentsSupported)) AND NOT(MultipleShipToAddresses) AND isDefined(CommonShipToAddress)#">
+			   <isif condition="#isDefined(CurrentCartBO:InvoiceToAddressBO)#">
+				<div class="form-group">
+					<a class="btn btn-default" href="#URL(Action('ViewCheckoutMultipleAddresses-MultipleShipping'))#"><istext key="checkout.button.multipleShipping" /></a>	
+				</div>
+			  </isif>
+		  </isif>
+		</isif>
+			
+		
+	</div>
+
+	<div class="col-sm-12 col-md-4">
+		<h2><istext key="checkout.order_details.heading" /></h2>
+		
+		<isinclude template="checkout/common/widgets/ItemsInCart">
+		<isinclude template="checkout/common/widgets/SubscriptionBox">
+		<div class="cost-summary">
+			<isinclude template="cart/common/CostSummary">
+			<isinclude template="inc/CSRFGuardJSToken"/>
+			<a data-csrf-guarded class="btn btn-primary btn-lg btn-block" 
+			<isif condition="#MultipleShipToAddresses#">
+				href="#URL(Action('ViewCheckoutMultipleAddresses-SelectMultipleShipToAddresses'))#"> 
+			<iselse>
+				href="#URL(Action('ViewCheckoutAddresses-ContinueCheckout'))#"> 
+			</isif><istext key="checkout.button.label" /></a>
+		</div>
+		<isinclude template="checkout/common/widgets/SecurityPrivacyPolicyLink">
+	</div>
+</div>
+

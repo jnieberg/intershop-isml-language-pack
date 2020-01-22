@@ -1,0 +1,94 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "ISML",
+	"patterns": [
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#iscomments"
+		},
+		{
+			"include": "#jsp"
+		},
+		{
+			"include": "#quoted-double"
+		},
+		{
+			"include": "#variables"
+		},
+		{
+			"include": "#markup"
+		},
+		{
+			"include": "#attributes"
+		}
+	],
+	"repository": {
+		"markup": {
+			"name": "keyword.control.isml",
+			"begin": "</?(i|I)(s|S)\\w*?\\b",
+			"end": ">",
+			"patterns": [
+				{
+					"include": "#variables"
+				},
+				{
+					"include": "#quoted-double"
+				}
+			]
+		},
+		"attributes": {
+			"patterns": [
+				{
+					"name": "entity.name.function.isml",
+					"match": "\\b\\w+?="
+				}
+			]
+		},
+		"quoted-double": {
+			"name": "string.quoted.double.isml",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"include": "#variables"
+				},
+				{
+					"include": "#markup"
+				}
+			]
+		},
+		"quoted-single": {
+			"name": "markup.quote.isml",
+			"begin": "'",
+			"end": "'"
+		},
+		"jsp": {
+			"name": "support.class.isml",
+			"begin": "<%",
+			"end": "%>"
+		},
+		"variables": {
+			"name": "variable.isml",
+			"begin": "#",
+			"end": "#",
+			"patterns": [
+				{
+					"include": "#quoted-single"
+				}
+			]
+		},
+		"comments": {
+			"name": "comment.isml",
+			"begin": "<!---",
+			"end": "--->"
+		},
+		"iscomments": {
+			"name": "comment.isml",
+			"begin": "<iscomment>",
+			"end": "</iscomment>"
+		}
+	},
+	"scopeName": "source.isml"
+}
